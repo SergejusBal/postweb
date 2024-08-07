@@ -1,5 +1,7 @@
 var url = "http://localhost:8080/posts";
 
+var offset = 0;
+
 document.getElementById("createPost").addEventListener("click", async function(event) {
 
     let post = fillPostData();
@@ -12,7 +14,7 @@ document.getElementById("createPost").addEventListener("click", async function(e
 
 document.getElementById("showPosts").addEventListener("click", async function(event) {
 
-    let posts = await getPosts();
+    let posts = await getPosts(offset,10);
     if(posts){
         await displayPosts(posts);
     }
@@ -53,10 +55,10 @@ async function createPost(post) {
     
 }
 
-async function getPosts() {     
+async function getPosts(offset, limit) {     
 
     try{
-        let response = await fetch(url, {
+        let response = await fetch(url+"?offset=" + offset +  "&limit=" + limit, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -81,7 +83,7 @@ async function getPosts() {
 
 function displayPosts(posts) {
     const tableBody = document.getElementById('postTable').getElementsByTagName('tbody')[0];
-    tableBody.innerHTML = ''; // Clear existing clients entries
+ //   tableBody.innerHTML = ''; // Clear existing clients entries
 
     posts.forEach(posts => {
         const row = tableBody.insertRow();
@@ -90,7 +92,7 @@ function displayPosts(posts) {
         row.insertCell(2).textContent = posts.content || 'No name available';
         row.insertCell(3).textContent = posts.contacts || 'No name available';
         row.insertCell(4).textContent = posts.data_created || 'No name available';
-        
+        offset++;
     });
 }
 
@@ -134,3 +136,27 @@ function checkphone(phoneNumber){
     const phoneNumberPattern = /^\+370\d{8}$/;
     return phoneNumberPattern.test(phoneNumber);   
 }
+
+
+
+
+window.addEventListener('scroll', async function() {
+        
+    let hasLoaded = false;
+
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight && !hasLoaded) {
+        let posts = await getPosts(offset,10);
+        if(posts){
+            await displayPosts(posts);
+        }
+        hasLoaded = true;        
+    }
+    else if (window.innerHeight + window.scrollY < document.body.offsetHeight) {
+        hasLoaded = false;
+    }
+
+});
+
+
+
+
