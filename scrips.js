@@ -21,6 +21,20 @@ document.getElementById("showPosts").addEventListener("click", async function(ev
 
 });
 
+document.addEventListener('DOMContentLoaded',  async function() {    
+    let load =0;
+
+    while(!hasVerticalScrollBar() && load < 10){  
+        let posts = await getPosts(offset,10);
+        if(posts){
+            await displayPosts(posts);
+        } 
+        load++;        
+    } 
+
+});
+
+
 
 
 async function createPost(post) {     
@@ -157,6 +171,10 @@ window.addEventListener('scroll', async function() {
 
 });
 
+
+function hasVerticalScrollBar() {
+    return document.body.scrollHeight > window.innerHeight;
+}
 
 
 
