@@ -16,8 +16,7 @@ body {
   .container {
     display: flex;
     justify-content: space-between;
-    padding: 20px;
-    max-width: 1200px;
+    padding: 20px;    
     margin: 0 auto;
   }
   
@@ -74,36 +73,70 @@ body {
   .button-group button:hover {
     background-color: #45a049;
   }
-  
-  .table-container {
-    margin-left: 350px;
-    width: calc(100% - 370px);
-    overflow-x: auto;
-  }
-  
-  .event-table {
+
+  .content-container{ 
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 10px;    
     width: 100%;
-    border-collapse: collapse;
+    margin-left: 450px;    
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;   
+    
+  }
+  .post{
+    display: flex;              
+    flex-direction: column; 
+    border-radius: 10px;        
+    padding: 20px;
+    margin: 5px;
+    border: 1px solid #ccc; 
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); 
+    background-color: #f9f9f9; 
+    height: auto; 
+    justify-content: space-between;
+  }
+
+  .post-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;   
+    font-weight: bold;
+    color: #1f913b;
+  }
+
+
+  .post-id, .post-name, .post-date {
+    display: inline-block;
+    margin-right: 16px;
+    color: #1f913b; 
+  }
+
+
+  .post-content {
+    border-top: 2px solid #eee; 
+    margin-bottom: 15px;
+    line-height: 1.8;
+    text-align: justify;
+    font-size: 20px;
+    color: #333; 
+  }
+
+
+  .post-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: bold;
+    color: #1f913b; 
+    border-top: 2px solid #eee; 
+    padding-top: 10px;
+    margin-top: 10px;
   }
   
-  .event-table th, .event-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-  
-  .event-table th {
-    background-color: #2a8a21;
-    color: #fff;
-    text-align: left;
-  }
-  
-  .event-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  .event-table tbody tr:hover {
-    background-color: #ddd;
-  }
+
 
   #content{
     height: 200px;
@@ -116,3 +149,39 @@ body {
     resize: vertical;
     color: #1f913b;
   }
+
+
+  @media (max-width: 1000px) {
+    .container{
+        flex-direction: column; 
+        justify-content: center;
+        padding: 10px;
+        gap: 50px;
+    }
+
+    .form-container {
+        position:relative;        
+        width: 95%; 
+        margin: 0 auto;
+        left: 0;
+        padding: 10px;  
+    }
+
+    .content-container {
+        display: flex; 
+        flex-direction: column;
+        margin: 0 auto; 
+        width: 95%; 
+        padding: 10px;        
+    }
+
+
+    .button-group {
+        flex-direction: row; 
+        justify-content: space-around; 
+    }
+
+    .button-group button {
+        flex-grow: 1; 
+    }
+}

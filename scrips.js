@@ -1,8 +1,12 @@
-var url = "http://localhost:8080/posts";
-
+var url = "http://localhost:8080";
 var offset = 0;
 
 document.getElementById("createPost").addEventListener("click", async function(event) {
+
+    if(!getCookie("paymentCode")) {
+        document.getElementById("response").innerHTML = "Payment needed";
+        return;
+    }
 
     let post = fillPostData();
     if(post){
@@ -21,30 +25,16 @@ document.getElementById("showPosts").addEventListener("click", async function(ev
 
 });
 
-document.addEventListener('DOMContentLoaded',  async function() {    
-    let load =0;
-
-    while(!hasVerticalScrollBar() && load < 10){  
-        let posts = await getPosts(offset,10);
-        if(posts){
-            await displayPosts(posts);
-        } 
-        load++;        
-    } 
-
-});
-
-
-
-
 async function createPost(post) {     
 
     try{   
-        let response = await fetch(url, {
+        let response = await fetch(url + '/posts', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',               
+                'Content-Type': 'application/json', 
+                'PaymentCode':  getCookie("paymentCode") + "",
+                'PaymentID':  getCookie("paymentID"),            
             },
             body: JSON.stringify({
             "name":post.name,           
@@ -52,16 +42,26 @@ async function createPost(post) {
             "contacts":post.contacts          
             }),        
         })
-        
+
+        if (response.status == 500){
+            document.getElementById("response").innerHTML = await response.text();
+            return;
+        }
+
+        if (response.status == 402){
+            document.getElementById("response").innerHTML = await response.text();
+            return;
+        }        
 
         if (response.status == 400){
             document.getElementById("response").innerHTML = await response.text();
             return;
         }
-        else if (response.status == 200) {
+        if (response.status == 200) {
             document.getElementById("response").innerHTML = await response.text();
             return;
         }  
+
     }    
     catch(error){
         console.error('Error:', error);
@@ -72,7 +72,7 @@ async function createPost(post) {
 async function getPosts(offset, limit) {     
 
     try{
-        let response = await fetch(url+"?offset=" + offset +  "&limit=" + limit, {
+        let response = await fetch(url + '/posts'+"?offset=" + offset +  "&limit=" + limit, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -95,20 +95,58 @@ async function getPosts(offset, limit) {
     
 }
 
-function displayPosts(posts) {
-    const tableBody = document.getElementById('postTable').getElementsByTagName('tbody')[0];
- //   tableBody.innerHTML = ''; // Clear existing clients entries
 
+function displayPosts(posts) {    
+    const post_container = document.getElementById("postsContainer");
+    
     posts.forEach(posts => {
-        const row = tableBody.insertRow();
-        row.insertCell(0).textContent = posts.id || 'No name available';
-        row.insertCell(1).textContent = posts.name || 'No name available';
-        row.insertCell(2).textContent = posts.content || 'No name available';
-        row.insertCell(3).textContent = posts.contacts || 'No name available';
-        row.insertCell(4).textContent = posts.data_created || 'No name available';
+      
+        const newPost = document.createElement("div");
+        newPost.className = "post";        
+
+        const postHeader = document.createElement("div");
+        postHeader.className = "post-header";
+
+        const id_span = document.createElement("span");
+        id_span.className = "post-id";
+        id_span.textContent = "ID: " + posts.id;
+        const name_spam = document.createElement("span");
+        name_spam.className = "post-name";
+        name_spam.textContent = "Posted by: " + posts.name; 
+        postHeader.appendChild(name_spam);
+        postHeader.appendChild(id_span);     
+
+
+        const postBody = document.createElement("div");
+        postBody.className = "post-content";
+        postBody.textContent = posts.content;
+
+
+        const postFotter = document.createElement("div");
+        postFotter.className = "post-footer";
+
+        const id_phone = document.createElement("span");
+        id_phone.className = "post-phone";
+        id_phone.textContent = "Phone: " + posts.contacts.substring(0, 4) + " " + posts.contacts.substring(4, 5) + " " + posts.contacts.substring(5, 8) + " " + posts.contacts.substring(8, 12);
+        const date_spam = document.createElement("span");
+        date_spam.className = "post-date";      
+        let formattedDate = posts.data_created.replace('T', ' ');
+        date_spam.textContent = "Date: " + formattedDate;
+        postFotter.appendChild(id_phone);
+        postFotter.appendChild(date_spam); 
+        
+
+        newPost.appendChild(postHeader);
+        newPost.appendChild(postBody); 
+        newPost.appendChild(postFotter); 
+
+        post_container.appendChild(newPost);
+
+        console.log(offset);
         offset++;
     });
 }
+
 
 function fillPostData(){
     var post = {};   
@@ -152,7 +190,18 @@ function checkphone(phoneNumber){
 }
 
 
+document.addEventListener('DOMContentLoaded',  async function() {    
+    let load =0;
 
+    while(!hasVerticalScrollBar() && load < 10){  
+        let posts = await getPosts(offset,10);
+        if(posts){
+            await displayPosts(posts);
+        } 
+        load++;        
+    } 
+
+});
 
 window.addEventListener('scroll', async function() {
         
@@ -165,16 +214,101 @@ window.addEventListener('scroll', async function() {
         }
         hasLoaded = true;        
     }
-    else if (window.innerHeight + window.scrollY < document.body.offsetHeight) {
+    else if (window.innerHeight + window.scrollY + 100 < document.body.offsetHeight) {
         hasLoaded = false;
     }
 
 });
 
-
 function hasVerticalScrollBar() {
     return document.body.scrollHeight > window.innerHeight;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//######### this is directly using payment
+//
+// src="https://js.stripe.com/v3/">
+
+//   document.addEventListener("DOMContentLoaded", async () => {
+//     const stripe = Stripe('pk_test_your_public_key');
+
+//     const createPaymentIntent = async () => {
+//       const response = await fetch('/api/stripe/create-payment-intent', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({
+//           amount: 2000, // Example amount in cents
+//           currency: 'usd'
+//         })
+//       });
+
+//       const { clientSecret } = await response.json();
+//       return clientSecret;
+//     };
+
+//     const handlePayment = async () => {
+//       const clientSecret = await createPaymentIntent();
+
+//       const result = await stripe.confirmCardPayment(clientSecret, {
+//         payment_method: {
+//           card: document.querySelector('#card-element'),
+//           billing_details: {
+//             name: 'Jenny Rosen'
+//           }
+//         }
+//       });
+
+//       if (result.error) {
+//         // Show error to your customer
+//         console.error(result.error.message);
+//       } else {
+//         if (result.paymentIntent.status === 'succeeded') {
+//           // The payment is complete!
+//           console.log('Payment succeeded!');
+//         }
+//       }
+//     };
+
+//     document.querySelector('#payment-button').addEventListener('click', handlePayment);
+
+//     const elements = stripe.elements();
+//     const cardElement = elements.create('card');
+//     cardElement.mount('#card-element');
+//   });
+
+
+document.getElementById("checkout").addEventListener("click", async () => {
+    // Replace with your public key
+    const stripe = Stripe('pk_test_51PlENQHWGvvl25KmMUuPtb9iFyXtRJt8Xf1ttsKjNS4ryOkdvZz2FNrwr0KCNBKTQvBiCeOER6LxNUbY8KVQklkW00fZHeGmb4');
+    const response = await fetch(url+'/api/stripe/create-checkout-session', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({  
+        amount: 2000, // Amount in cents
+        currency: 'usd'
+    })
+    });
+
+    const session = await response.json();    
+
+    const sessionId = session.id;
+    setCookie("paymentCode", session.paymentCode,1);
+    setCookie("paymentID", session.paymentID,1);
+
+    // Redirect to Stripe Checkout
+    const { error } = await stripe.redirectToCheckout({ sessionId });
+
+    if (error) {
+    console.error("Stripe Checkout error:", error.message);
+    }
+});
+
+
+
 
 
 
